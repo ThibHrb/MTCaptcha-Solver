@@ -51,7 +51,7 @@ def clean_label(raw_label):
 
 class CaptchaDataset(Dataset):
     def __init__(self, dir_path):
-        self.image_paths = glob.glob(os.path.join(dir_path, "*.png"))
+        self.image_paths = glob.glob(os.path.join(dir_path, "*.gif"))
         
     def __len__(self):
         return len(self.image_paths)
@@ -62,7 +62,7 @@ class CaptchaDataset(Dataset):
         
         try:
             # Extraction et nettoyage du label
-            raw_label = filename.split('_')[-1].replace('.png', '')
+            raw_label = filename.split('_')[-1].replace('.gif', '')
             label_text = clean_label(raw_label)
             
             if len(label_text) == 0:
@@ -99,8 +99,8 @@ def robust_collate_fn(batch):
 train_loader = None
 test_loader = None
 
-if os.path.exists("dataset_NB"):
-    full_dataset = CaptchaDataset("dataset_NB")
+if os.path.exists("captured_hits"):
+    full_dataset = CaptchaDataset("captured_hits")
     if len(full_dataset) > 0:
         train_size = int(0.8 * len(full_dataset))
         test_size = len(full_dataset) - train_size
@@ -168,10 +168,10 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 ctc_loss = nn.CTCLoss(blank=0, zero_infinity=True)
 
 # Chargement des poids existants
-if os.path.exists("crnn_weights_v2.pt"):
+if os.path.exists("crnn_weights.pt"):
     try:
-        model.load_state_dict(torch.load("crnn_weights_v2.pt", map_location=DEVICE))
-        print("--- Poids chargés depuis crnn_weights_v2.pt ---")
+        model.load_state_dict(torch.load("crnn_weights.pt", map_location=DEVICE))
+        print("--- Poids chargés depuis crnn_weights.pt ---")
     except:
         print("--- Erreur chargement poids, initialisation à neuf ---")
 
@@ -218,9 +218,9 @@ def train(model, device, train_loader, optimizer, epoch):
         print(f"Epoch {i + 1} - Loss: {avg_loss:.4f}")
 
 # Lance l'entrainement si on a des données et qu'on le souhaite (ou si pas de poids)
-if train_loader and (not os.path.exists("crnn_weights_v2.pt") or "FORCE_TRAIN" in os.environ):
+if train_loader and (not os.path.exists("crnn_weights.pt") or "FORCE_TRAIN" in os.environ):
     train(model, DEVICE, train_loader, optimizer, EPOCHS)
-    torch.save(model.state_dict(), "crnn_weights_v2.pt")
+    torch.save(model.state_dict(), "crnn_weights.pt")
     print("--- Modèle sauvegardé ---")
 
 # --- 5. TEST / EVALUATION ---
@@ -270,7 +270,7 @@ def predict_image(image_path):
 
 # Exemple d'appel final
 print("\n--- Test manuel ---")
-result = predict_image("cleaned_resultat.png")
+result = predict_image("test/lKgZIZ.gif")
 if result:
     print(f"Prédiction pour l'image : {result}")
 else:
